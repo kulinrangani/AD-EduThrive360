@@ -8,27 +8,26 @@ import {
   useNavigate,
   useLocation,
 } from "react-router-dom";
-import { IconSpark } from "./component/Icons.jsx";
-import { Card } from "./component/UI.jsx";
 import { Sidebar } from "./component/Sidebar.jsx";
 import { Navbar } from "./component/Navbar.jsx";
 import { DashboardPage } from "./pages/DashboardPage.jsx";
-import { SchoolsPage } from "./pages/SchoolsPage.jsx";
+import { OrganizationsPage } from "./pages/OrganizationsPage.jsx";
+import { CreateOrganizationPage } from "./pages/CreateOrganizationPage.jsx";
+import { OrganizationDetailPage } from "./pages/OrganizationDetailPage.jsx";
+import { QuizzesPage } from "./pages/QuizzesPage.jsx";
+import { QuizBuilderPage } from "./pages/QuizBuilderPage.jsx";
 import { UsersPage } from "./pages/UsersPage.jsx";
 import { SettingsPage } from "./pages/SettingsPage.jsx";
 import { WellnessPage } from "./pages/WellnessPage.jsx";
 import { ReportsPage } from "./pages/ReportsPage.jsx";
 import { AlertsPage } from "./pages/AlertsPage.jsx";
 import { LoginPage, ForgotPage } from "./pages/AuthPage.jsx";
+import { useAuth } from "./context/AuthContext.jsx";
 
-/**
- * react-router-dom paths ↔ src/pages/*Page.jsx
- * /login, /forgot → AuthPage.jsx
- * /dashboard, /schools, /users, /settings, /wellness, /alerts, /reports → *Page.jsx
- */
 const APP_PAGE_SET = new Set([
   "dashboard",
-  "schools",
+  "quizzes",
+  "organizations",
   "users",
   "wellness",
   "alerts",
@@ -39,7 +38,11 @@ const DEFAULT_APP_PAGE = "dashboard";
 
 const PAGE_TITLES = {
   dashboard: { title: "Dashboard", sub: "Overview" },
-  schools: { title: "Schools", sub: "School management" },
+  quizzes: { title: "Quizzes", sub: "Builder & configuration" },
+  "quizzes/:quizId": { title: "Quiz builder", sub: "Quizzes" },
+  organizations: { title: "Organizations", sub: "Schools & corporates" },
+  "organizations/new": { title: "Add organization", sub: "Organizations" },
+  "organizations/:orgId": { title: "Organization", sub: "Detail" },
   users: { title: "Users", sub: "Counselors, students & parents" },
   wellness: { title: "Wellness", sub: "Programs & insights" },
   alerts: { title: "Alerts", sub: "Active flags & reviews" },
@@ -47,28 +50,41 @@ const PAGE_TITLES = {
   settings: { title: "Settings", sub: "Workspace configuration" },
 };
 
-function PlaceholderPage({ label }) {
-  return (
-    <div className="fade-in">
-      <Card className="text-center py-16">
-        <div className="w-16 h-16 rounded-2xl bg-beige mx-auto flex items-center justify-center mb-4">
-          <IconSpark size={24} className="text-teal" />
-        </div>
-        <h3 className="font-display text-3xl">{label} — coming next</h3>
-        <p className="text-ink/60 mt-2 max-w-md mx-auto">
-          This screen is wired up in navigation. Dashboard, Schools, Users and
-          Settings are the hero flows for this review.
-        </p>
-      </Card>
-    </div>
-  );
+function ProtectedRoute({ children }) {
+  const { isAuthenticated, loading } = useAuth();
+  const location = useLocation();
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-beige flex items-center justify-center">
+        <p className="text-ink/60 text-sm">Loading session…</p>
+      </div>
+    );
+  }
+
+  if (!isAuthenticated) {
+    return <Navigate to="/login" state={{ from: location.pathname }} replace />;
+  }
+
+  return children;
 }
 
 function LoginRoute() {
   const navigate = useNavigate();
+  const location = useLocation();
+  const { login, isAuthenticated } = useAuth();
+
+  if (isAuthenticated) {
+    const dest = location.state?.from ?? "/dashboard";
+    return <Navigate to={dest} replace />;
+  }
+
   return (
     <LoginPage
-      onLogin={() => navigate("/dashboard")}
+      onLogin={async (email, password) => {
+        await login(email, password);
+        navigate(location.state?.from ?? "/dashboard", { replace: true });
+      }}
       onForgot={() => navigate("/forgot")}
     />
   );
@@ -82,10 +98,19 @@ function ForgotRoute() {
 function AdminLayout() {
   const navigate = useNavigate();
   const location = useLocation();
-  const seg =
-    location.pathname.replace(/^\//, "").split("/")[0] || DEFAULT_APP_PAGE;
+  const { user, logout } = useAuth();
+  const pathKey = location.pathname.replace(/^\//, "").replace(/\/$/, "") || DEFAULT_APP_PAGE;
+  const seg = pathKey.split("/")[0] || DEFAULT_APP_PAGE;
   const page = APP_PAGE_SET.has(seg) ? seg : DEFAULT_APP_PAGE;
-  const { title, sub } = PAGE_TITLES[page] || PAGE_TITLES.dashboard;
+  const isOrgDetail =
+    pathKey.startsWith("organizations/") && pathKey !== "organizations/new";
+  const isQuizBuilder =
+    pathKey.startsWith("quizzes/") && pathKey !== "quizzes/new";
+  const { title, sub } = isOrgDetail
+    ? { title: "Organization", sub: "Detail view" }
+    : isQuizBuilder
+      ? { title: "Quiz builder", sub: "Quizzes" }
+      : PAGE_TITLES[pathKey] || PAGE_TITLES[page] || PAGE_TITLES.dashboard;
   const [collapsed, setCollapsed] = useState(
     () => localStorage.getItem("et_collapsed") === "1"
   );
@@ -94,6 +119,11 @@ function AdminLayout() {
   useEffect(() => {
     localStorage.setItem("et_collapsed", collapsed ? "1" : "0");
   }, [collapsed]);
+
+  const handleLogout = () => {
+    logout();
+    navigate("/login");
+  };
 
   return (
     <div
@@ -106,7 +136,8 @@ function AdminLayout() {
           onNav={(k) => navigate(`/${k}`)}
           collapsed={collapsed}
           onToggleCollapsed={() => setCollapsed((c) => !c)}
-          onLogout={() => navigate("/login")}
+          onLogout={handleLogout}
+          user={user}
         />
         <button
           type="button"
@@ -145,7 +176,8 @@ function AdminLayout() {
               }}
               collapsed={false}
               onToggleCollapsed={() => {}}
-              onLogout={() => navigate("/login")}
+              onLogout={handleLogout}
+              user={user}
             />
           </div>
         </div>
@@ -172,13 +204,6 @@ function AdminLayout() {
             <a href="#" className="hover:text-teal">
               API
             </a>
-            <button
-              type="button"
-              onClick={() => navigate("/login")}
-              className="hover:text-teal"
-            >
-              View auth flow
-            </button>
           </div>
         </footer>
       </main>
@@ -192,10 +217,22 @@ export default function App() {
       <Routes>
         <Route path="/login" element={<LoginRoute />} />
         <Route path="/forgot" element={<ForgotRoute />} />
-        <Route path="/" element={<AdminLayout />}>
+        <Route path="/schools" element={<Navigate to="/organizations" replace />} />
+        <Route
+          path="/"
+          element={
+            <ProtectedRoute>
+              <AdminLayout />
+            </ProtectedRoute>
+          }
+        >
           <Route index element={<Navigate to="dashboard" replace />} />
           <Route path="dashboard" element={<DashboardPage />} />
-          <Route path="schools" element={<SchoolsPage />} />
+          <Route path="quizzes" element={<QuizzesPage />} />
+          <Route path="quizzes/:quizId" element={<QuizBuilderPage />} />
+          <Route path="organizations" element={<OrganizationsPage />} />
+          <Route path="organizations/new" element={<CreateOrganizationPage />} />
+          <Route path="organizations/:orgId" element={<OrganizationDetailPage />} />
           <Route path="users" element={<UsersPage />} />
           <Route path="settings" element={<SettingsPage />} />
           <Route path="wellness" element={<WellnessPage />} />

@@ -9,6 +9,7 @@ import {
   IconCheck,
 } from '../component/Icons.jsx';
 import { Badge, Input, Button, Sparkline } from '../component/UI.jsx';
+import * as authApi from '../api/auth.js';
 
 // Decorative illustration — NO copyrighted imagery. Abstract geometric composition using brand colors.
 function AuthIllustration() {
@@ -79,6 +80,24 @@ function AuthIllustration() {
 
 function LoginPage({ onLogin, onForgot }) {
   const [show, setShow] = useState(false);
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [error, setError] = useState('');
+  const [submitting, setSubmitting] = useState(false);
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setError('');
+    setSubmitting(true);
+    try {
+      await onLogin(email, password);
+    } catch (err) {
+      setError(err.response?.data?.error ?? err.message ?? 'Sign in failed');
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-beige p-4 md:p-8 flex items-center justify-center fade-in">
       <div className="w-full max-w-[1160px] grid grid-cols-1 lg:grid-cols-[1.05fr_1fr] bg-white rounded-3xl shadow-lift overflow-hidden border border-ink/5">
@@ -96,12 +115,16 @@ function LoginPage({ onLogin, onForgot }) {
 
           <Badge tone="teal" className="self-start mb-4">Super Admin</Badge>
           <h1 className="font-display text-4xl md:text-5xl leading-[1.05]">Welcome <br/><span className="italic text-teal">back.</span></h1>
-          <p className="text-ink/60 mt-3 max-w-sm">Sign in to oversee your schools, counselors, and wellness programs.</p>
+          <p className="text-ink/60 mt-3 max-w-sm">Platform super admin only. Organization admins and counselors use the User app.</p>
 
-          <form className="mt-8 space-y-4" onSubmit={(e)=>{ e.preventDefault(); onLogin(); }}>
+          {error && (
+            <p className="mt-4 text-sm text-red-600 bg-red-50 rounded-lg px-3 py-2">{error}</p>
+          )}
+
+          <form className="mt-8 space-y-4" onSubmit={handleSubmit}>
             <div>
               <label className="text-xs uppercase tracking-wider text-ink/50 font-semibold">Work email</label>
-              <Input className="mt-1.5" icon={<IconMail size={16}/>} type="email" defaultValue="aarav@eduthrive.io" placeholder="you@school.edu"/>
+              <Input className="mt-1.5" icon={<IconMail size={16}/>} type="email" value={email} onChange={(e)=>setEmail(e.target.value)} placeholder="admin@eduthrive.io" required autoComplete="email"/>
             </div>
             <div>
               <div className="flex items-center justify-between">
@@ -109,7 +132,7 @@ function LoginPage({ onLogin, onForgot }) {
                 <button type="button" onClick={onForgot} className="text-xs text-teal hover:underline font-semibold">Forgot?</button>
               </div>
               <div className="relative mt-1.5">
-                <Input icon={<IconLock size={16}/>} type={show?'text':'password'} defaultValue="••••••••••" />
+                <Input icon={<IconLock size={16}/>} type={show?'text':'password'} value={password} onChange={(e)=>setPassword(e.target.value)} required autoComplete="current-password" />
                 <button type="button" onClick={()=>setShow(s=>!s)} className="absolute right-3 top-1/2 -translate-y-1/2 text-ink/50 hover:text-ink">
                   <IconEye size={16}/>
                 </button>
@@ -117,10 +140,12 @@ function LoginPage({ onLogin, onForgot }) {
             </div>
 
             <label className="flex items-center gap-2 text-sm text-ink/70">
-              <input type="checkbox" className="accent-teal w-4 h-4"/> Keep me signed in for 7 days
+              <input type="checkbox" className="accent-teal w-4 h-4" defaultChecked/> Keep me signed in for 7 days
             </label>
 
-            <Button size="lg" className="w-full" iconRight={<IconArrowRight size={16}/>}>Sign in</Button>
+            <Button size="lg" className="w-full" iconRight={<IconArrowRight size={16}/>} disabled={submitting}>
+              {submitting ? 'Signing in…' : 'Sign in'}
+            </Button>
 
             <div className="flex items-center gap-3 my-2">
               <div className="flex-1 h-px bg-ink/10"/>
@@ -140,6 +165,28 @@ function LoginPage({ onLogin, onForgot }) {
 
 function ForgotPage({ onBack }) {
   const [sent, setSent] = useState(false);
+  const [email, setEmail] = useState('');
+  const [error, setError] = useState('');
+  const [devHint, setDevHint] = useState('');
+  const [submitting, setSubmitting] = useState(false);
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setError('');
+    setSubmitting(true);
+    try {
+      const res = await authApi.forgotPassword(email);
+      setSent(true);
+      if (res.devResetToken) {
+        setDevHint(`Dev token: ${res.devResetToken}`);
+      }
+    } catch (err) {
+      setError(err.response?.data?.error ?? 'Request failed');
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-beige p-4 md:p-8 flex items-center justify-center fade-in">
       <div className="w-full max-w-[1160px] grid grid-cols-1 lg:grid-cols-[1.05fr_1fr] bg-white rounded-3xl shadow-lift overflow-hidden border border-ink/5">
@@ -156,12 +203,18 @@ function ForgotPage({ onBack }) {
               <h1 className="font-display text-4xl md:text-5xl leading-[1.05]">Let's get you <br/><span className="italic text-teal">back in.</span></h1>
               <p className="text-ink/60 mt-3 max-w-sm">Enter the email linked to your admin account and we'll send a reset link.</p>
 
-              <form className="mt-8 space-y-4" onSubmit={(e)=>{ e.preventDefault(); setSent(true); }}>
+              {error && (
+                <p className="mt-4 text-sm text-red-600 bg-red-50 rounded-lg px-3 py-2">{error}</p>
+              )}
+
+              <form className="mt-8 space-y-4" onSubmit={handleSubmit}>
                 <div>
                   <label className="text-xs uppercase tracking-wider text-ink/50 font-semibold">Work email</label>
-                  <Input className="mt-1.5" icon={<IconMail size={16}/>} type="email" placeholder="you@school.edu"/>
+                  <Input className="mt-1.5" icon={<IconMail size={16}/>} type="email" value={email} onChange={(e)=>setEmail(e.target.value)} placeholder="you@school.edu" required/>
                 </div>
-                <Button size="lg" className="w-full" iconRight={<IconArrowRight size={16}/>}>Send reset link</Button>
+                <Button size="lg" className="w-full" iconRight={<IconArrowRight size={16}/>} disabled={submitting}>
+                  {submitting ? 'Sending…' : 'Send reset link'}
+                </Button>
               </form>
 
               <div className="mt-8 p-4 rounded-xl bg-beige/60 text-sm text-ink/70">
@@ -172,7 +225,10 @@ function ForgotPage({ onBack }) {
             <>
               <div className="w-14 h-14 rounded-2xl bg-teal/15 text-teal flex items-center justify-center mb-5"><IconCheck size={28}/></div>
               <h1 className="font-display text-4xl leading-[1.05]">Check your inbox.</h1>
-              <p className="text-ink/60 mt-3 max-w-sm">If an admin account exists for that email, a reset link is on its way. The link expires in 30 minutes.</p>
+              <p className="text-ink/60 mt-3 max-w-sm">If an admin account exists for that email, reset instructions were sent. In development, check the API console for a token.</p>
+              {devHint && (
+                <p className="mt-3 text-xs font-mono text-ink/70 bg-beige rounded-lg p-3 break-all">{devHint}</p>
+              )}
               <Button size="lg" className="w-full mt-6" onClick={onBack} icon={<IconArrowLeft size={16}/>}>Return to sign in</Button>
             </>
           )}

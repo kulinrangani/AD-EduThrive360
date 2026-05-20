@@ -1,85 +1,175 @@
-import { useMemo, useState } from "react";
-import {
-  IconDownload,
-  IconCalendar,
-  IconChart,
-  IconArrowRight,
-  IconSchool,
-  IconUsers,
-} from "../component/Icons.jsx";
-import { Card, Badge, Button, Select } from "../component/UI.jsx";
-
-const REPORTS = [
-  { id: "R-2401", name: "Student Wellness Baseline Survey", scope: "All schools", type: "Survey", lastRun: "Today, 09:10", status: "Ready" },
-  { id: "R-2394", name: "Parent Feedback Pulse Survey", scope: "Enterprise schools", type: "Survey", lastRun: "Yesterday, 18:22", status: "Ready" },
-  { id: "R-2380", name: "Mindful Mornings Campaign Performance", scope: "All schools", type: "Campaign", lastRun: "2 days ago", status: "Scheduled" },
-  { id: "R-2375", name: "Exam Calm Campaign Impact", scope: "Growth schools", type: "Campaign", lastRun: "3 days ago", status: "Failed" },
-];
-
-const METRICS = [
-  { label: "Survey reports", value: "42", sub: "Launched survey outcomes this month", icon: <IconChart size={20} />, tone: "bg-teal/10 text-teal" },
-  { label: "Campaign reports", value: "31", sub: "Program and campaign performance reports", icon: <IconCalendar size={20} />, tone: "bg-yellow/25 text-ink" },
-  { label: "Schools covered", value: "24", sub: "Survey and campaign participation", icon: <IconSchool size={20} />, tone: "bg-orange/15 text-orange" },
-  { label: "Respondents", value: "5,842", sub: "Students + parents in survey dataset", icon: <IconUsers size={20} />, tone: "bg-ink/10 text-ink" },
-];
+import { useEffect, useMemo, useState } from "react";
+import { Link } from "react-router-dom";
+import { IconDownload, IconChart, IconArrowRight, IconSchool, IconUsers } from "../component/Icons.jsx";
+import { Card, Badge, Button } from "../component/UI.jsx";
+import * as analyticsApi from "../api/analytics.js";
+import * as quizApi from "../api/quizzes.js";
 
 function ReportsPage() {
-  const [period, setPeriod] = useState("This month");
-  const [scope, setScope] = useState("All schools");
-  const readyCount = useMemo(() => REPORTS.filter((r) => r.status === "Ready").length, []);
+  const [overall, setOverall] = useState(null);
+  const [quizzes, setQuizzes] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const [o, q] = await Promise.all([
+          analyticsApi.getOverall(),
+          quizApi.listQuizzes(),
+        ]);
+        if (!cancelled) {
+          setOverall(o);
+          setQuizzes(Array.isArray(q) ? q : []);
+        }
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  const reports = useMemo(
+    () =>
+      (Array.isArray(quizzes) ? quizzes : []).map((q) => ({
+        id: q.id,
+        name: q.title,
+        scope: q.organizationId ? "Organization" : "Platform",
+        type: "Survey",
+        lastRun: q.updatedAt ? new Date(q.updatedAt).toLocaleString() : "—",
+        status: q.status === "published" ? "Ready" : "Draft",
+      })),
+    [quizzes],
+  );
+
+  const readyCount = reports.filter((r) => r.status === "Ready").length;
+
+  const METRICS = [
+    {
+      label: "Quiz results",
+      value: String(overall?.results?.total ?? "—"),
+      sub: "Scored attempts across platform",
+      icon: <IconChart size={20} />,
+      tone: "bg-teal/10 text-teal",
+    },
+    {
+      label: "Completed attempts",
+      value: String(overall?.attempts?.completed ?? "—"),
+      sub: "Finished quiz sessions",
+      icon: <IconChart size={20} />,
+      tone: "bg-yellow/25 text-ink",
+    },
+    {
+      label: "Organizations",
+      value: String(overall?.organizations ?? "—"),
+      sub: "Active tenants",
+      icon: <IconSchool size={20} />,
+      tone: "bg-orange/15 text-orange",
+    },
+    {
+      label: "Members",
+      value: String(overall?.members ?? "—"),
+      sub: "End-users registered",
+      icon: <IconUsers size={20} />,
+      tone: "bg-ink/10 text-ink",
+    },
+  ];
 
   return (
     <div className="space-y-6 fade-in">
       <div className="rounded-3xl p-6 md:p-8 bg-gradient-to-br from-ink to-inkSoft text-beige relative overflow-hidden grain">
-        <div className="absolute -right-14 -top-8 w-64 h-64 rounded-full bg-teal/30 blur-3xl pointer-events-none" />
         <div className="relative flex flex-col md:flex-row md:items-end justify-between gap-5">
           <div>
             <Badge tone="yellow" className="mb-3">Reporting Hub</Badge>
-            <h2 className="font-display text-3xl md:text-5xl leading-[1.05]">{readyCount} survey and campaign reports are ready.</h2>
-            <p className="text-beige/70 mt-3 max-w-2xl">Track outcomes of launched surveys and campaign performance in one place.</p>
+            <h2 className="font-display text-3xl md:text-5xl leading-[1.05]">
+              {readyCount} published quizzes · {overall?.results?.total ?? 0} results
+            </h2>
+            <p className="text-beige/70 mt-3 max-w-2xl">
+              Quiz outcomes and risk distribution from the psychological assessment engine.
+            </p>
           </div>
-          <div className="flex gap-3">
-            <Button variant="beige" icon={<IconDownload size={16} />}>Export all</Button>
-            <Button iconRight={<IconArrowRight size={16} />}>Create report</Button>
-          </div>
+          <Link to="/quizzes">
+            <Button iconRight={<IconArrowRight size={16} />}>Manage quizzes</Button>
+          </Link>
         </div>
       </div>
+
+      {loading && <p className="text-sm text-ink/50">Loading reports…</p>}
+
+      {overall?.results?.riskDistribution && (
+        <Card>
+          <h3 className="font-display text-2xl mb-4">Risk distribution</h3>
+          <div className="grid grid-cols-3 gap-4">
+            {(["Low", "Medium", "High"]).map((level) => {
+              const count = overall.results.riskDistribution[level] ?? 0;
+              const total = overall.results.total || 1;
+              const pct = Math.round((count / total) * 100);
+              const tone =
+                level === "High" ? "red" : level === "Medium" ? "orange" : "green";
+              return (
+                <div key={level} className="text-center">
+                  <Badge tone={tone} dot className="mb-2">
+                    {level}
+                  </Badge>
+                  <p className="font-display text-3xl">{count}</p>
+                  <p className="text-xs text-ink/50 mt-1">{pct}% of results</p>
+                </div>
+              );
+            })}
+          </div>
+        </Card>
+      )}
 
       <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-5">
         {METRICS.map((m) => (
           <Card key={m.label}>
-            <div className="flex items-start justify-between gap-4">
-              <div><div className="text-xs uppercase tracking-wider text-ink/50 font-semibold">{m.label}</div><div className="font-display text-[40px] leading-none mt-3">{m.value}</div><p className="text-xs text-ink/50 mt-3">{m.sub}</p></div>
-              <span className={`w-11 h-11 rounded-xl flex items-center justify-center ${m.tone}`}>{m.icon}</span>
+            <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${m.tone}`}>
+              {m.icon}
             </div>
+            <p className="text-xs uppercase tracking-wider text-ink/50 font-semibold mt-4">
+              {m.label}
+            </p>
+            <p className="font-display text-3xl mt-1">{m.value}</p>
+            <p className="text-xs text-ink/60 mt-2">{m.sub}</p>
           </Card>
         ))}
       </div>
 
-      <Card>
-        <div className="flex flex-wrap items-center justify-between gap-3 mb-5">
-          <div><h3 className="font-display text-2xl">Survey & campaign templates</h3><p className="text-sm text-ink/60">Generate reports for launched surveys and active campaigns</p></div>
-          <div className="flex gap-2">
-            <Select value={scope} onChange={(e) => setScope(e.target.value)} className="w-44"><option>All schools</option><option>Enterprise schools</option><option>Growth schools</option></Select>
-            <Select value={period} onChange={(e) => setPeriod(e.target.value)} className="w-36"><option>This week</option><option>This month</option><option>This quarter</option></Select>
-          </div>
-        </div>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <div className="rounded-2xl border border-ink/10 p-4"><div className="text-xs uppercase tracking-wide text-ink/50 font-semibold">Survey report</div><h4 className="font-semibold mt-1">Wellness Baseline Survey Results</h4><p className="text-sm text-ink/60 mt-2">Response rate, average score, and segment breakdown by grade and school.</p><Button size="sm" className="mt-4">Run now</Button></div>
-          <div className="rounded-2xl border border-ink/10 p-4"><div className="text-xs uppercase tracking-wide text-ink/50 font-semibold">Survey report</div><h4 className="font-semibold mt-1">Parent Pulse Survey Analysis</h4><p className="text-sm text-ink/60 mt-2">Sentiment trends, top concerns, and response quality by region.</p><Button size="sm" className="mt-4">Run now</Button></div>
-          <div className="rounded-2xl border border-ink/10 p-4"><div className="text-xs uppercase tracking-wide text-ink/50 font-semibold">Campaign report</div><h4 className="font-semibold mt-1">Campaign Effectiveness Summary</h4><p className="text-sm text-ink/60 mt-2">Reach, participation, completion, and pre/post wellbeing lift.</p><Button size="sm" className="mt-4">Run now</Button></div>
-        </div>
-      </Card>
-
       <Card padded={false}>
-        <div className="px-6 py-5 border-b border-ink/5"><h3 className="font-display text-2xl">Recent runs</h3><p className="text-sm text-ink/60">Track execution status and download generated files</p></div>
-        <div className="divide-y divide-ink/5">
-          {REPORTS.map((r) => (
-            <div key={r.id} className="px-6 py-4 flex flex-col md:flex-row md:items-center md:justify-between gap-3">
-              <div><div className="font-semibold">{r.name}</div><div className="text-sm text-ink/60">{r.id} • {r.scope} • {r.type}</div></div>
-              <div className="flex items-center gap-3"><span className="text-xs text-ink/50">{r.lastRun}</span><Badge tone={r.status === "Ready" ? "green" : r.status === "Scheduled" ? "yellow" : "red"} dot>{r.status}</Badge><Button variant="outline" size="sm" icon={<IconDownload size={14} />}>Download</Button></div>
-            </div>
-          ))}
+        <div className="overflow-x-auto">
+          <table className="w-full text-sm">
+            <thead>
+              <tr className="text-left text-xs uppercase tracking-wider text-ink/50">
+                <th className="px-6 py-4 font-semibold">Report</th>
+                <th className="px-6 py-4 font-semibold">Type</th>
+                <th className="px-6 py-4 font-semibold">Status</th>
+                <th className="px-6 py-4 font-semibold">Updated</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-ink/5">
+              {reports.length === 0 && (
+                <tr>
+                  <td colSpan={4} className="px-6 py-8 text-ink/50">
+                    No quizzes configured yet.
+                  </td>
+                </tr>
+              )}
+              {reports.map((r) => (
+                <tr key={r.id} className="row-hover">
+                  <td className="px-6 py-4 font-semibold">{r.name}</td>
+                  <td className="px-6 py-4">{r.type}</td>
+                  <td className="px-6 py-4">
+                    <Badge tone={r.status === "Ready" ? "green" : "yellow"} dot>
+                      {r.status}
+                    </Badge>
+                  </td>
+                  <td className="px-6 py-4 text-ink/60">{r.lastRun}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
         </div>
       </Card>
     </div>

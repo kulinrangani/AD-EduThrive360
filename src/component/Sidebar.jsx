@@ -10,10 +10,12 @@ import {
 } from './Icons.jsx';
 import { cn, Avatar } from './UI.jsx';
 
-function Sidebar({ current, onNav, collapsed, onToggleCollapsed, onLogout }) {
+function Sidebar({ current, onNav, collapsed, onToggleCollapsed, onLogout, user }) {
+  const roleLabel = user?.role === 'super_admin' ? 'Super Admin' : user?.role === 'org_admin' ? 'Org Admin' : 'Admin';
   const items = [
     { key: 'dashboard', label: 'Dashboard', icon: <IconHome size={20}/> },
-    { key: 'schools',   label: 'Schools',   icon: <IconSchool size={20}/>, badge: '24' },
+    { key: 'quizzes', label: 'Quizzes', icon: <IconChart size={20}/> },
+    { key: 'organizations', label: 'Organizations', icon: <IconSchool size={20}/> },
     { key: 'users',     label: 'Users',     icon: <IconUsers size={20}/> },
     { key: 'wellness',  label: 'Wellness',  icon: <IconHeart size={20}/> },
     { key: 'alerts',    label: 'Alerts',    icon: <IconBell size={20}/>, badge: '3', badgeTone: 'orange' },
@@ -36,7 +38,7 @@ function Sidebar({ current, onNav, collapsed, onToggleCollapsed, onLogout }) {
         {!collapsed && (
           <div className="min-w-0">
             <div className="font-display text-[17px] leading-none text-beige">EduThrive<span className="text-orange">360</span></div>
-            <div className="text-[11px] text-beige/50 mt-1 tracking-wide uppercase">Super Admin</div>
+            <div className="text-[11px] text-beige/50 mt-1 tracking-wide uppercase">{roleLabel}</div>
           </div>
         )}
       </div>
@@ -84,18 +86,22 @@ function Sidebar({ current, onNav, collapsed, onToggleCollapsed, onLogout }) {
               <span className="w-2 h-2 rounded-full bg-yellow pulse-dot"/>
               <span className="text-[11px] uppercase tracking-wider text-beige/80 font-semibold">System healthy</span>
             </div>
-            <p className="text-sm text-beige/90 leading-snug">All 24 schools reporting. Uptime 99.98%.</p>
+            <p className="text-sm text-beige/90 leading-snug">
+              {user?.organizationId?.name
+                ? `${user.organizationId.name} workspace`
+                : 'Platform workspace active.'}
+            </p>
           </div>
         </div>
       )}
 
       {/* User footer — sticky bottom */}
       <div className={cn('border-t border-white/5 p-3 flex items-center gap-3 shrink-0', collapsed && 'justify-center')}>
-        <Avatar name="Aarav Mehta" size={38}/>
+        <Avatar name={user?.fullName ?? 'Admin'} size={38}/>
         {!collapsed && (
           <div className="min-w-0 flex-1">
-            <div className="text-sm font-semibold truncate">Aarav Mehta</div>
-            <div className="text-[11px] text-beige/50 truncate">aarav@eduthrive.io</div>
+            <div className="text-sm font-semibold truncate">{user?.fullName ?? 'Signed in'}</div>
+            <div className="text-[11px] text-beige/50 truncate">{user?.email ?? ''}</div>
           </div>
         )}
         {!collapsed && (
