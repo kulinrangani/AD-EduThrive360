@@ -52,7 +52,7 @@ export function Table<T extends { id?: string | number; _id?: string | number }>
               {columns.map((col) => (
                 <th
                   key={col.key}
-                  className={`px-6 py-2.5 font-semibold ${col.className ?? ""}`}
+                  className={`px-6 py-2.5 text-black-800 font-bold ${col.className ?? ""}`}
                 >
                   {col.header}
                 </th>
