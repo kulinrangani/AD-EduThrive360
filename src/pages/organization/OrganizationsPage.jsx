@@ -10,7 +10,7 @@ import {
   IconEdit,
   IconTrash,
 } from "../../component/Icons.jsx";
-import { Button, Input, Select, Badge, Card, Modal } from "../../component/UI.jsx";
+import { Button, Input, Select, Badge, Card, Modal, Toggle } from "../../component/UI.jsx";
 import { Table } from "../../component/Table";
 import * as orgApi from "../../api/organizations.js";
 
@@ -30,7 +30,9 @@ function OrganizationsPage() {
   const [editOrg, setEditOrg] = useState(null);
   const [editName, setEditName] = useState("");
   const [editType, setEditType] = useState("school");
+  const [editStatus, setEditStatus] = useState(true);
   const [saving, setSaving] = useState(false);
+
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -66,6 +68,7 @@ function OrganizationsPage() {
     setEditOrg(o);
     setEditName(o.name);
     setEditType(o.type);
+    setEditStatus(o.status ?? true);
     setEditOpen(true);
   };
 
@@ -74,7 +77,11 @@ function OrganizationsPage() {
     setSaving(true);
     setError("");
     try {
-      await orgApi.updateOrganization(editOrg.id, { name: editName.trim(), type: editType });
+      await orgApi.updateOrganization(editOrg.id, {
+        name: editName.trim(),
+        type: editType,
+        status: editStatus,
+      });
       setEditOpen(false);
       await load();
     } catch (err) {
@@ -84,15 +91,16 @@ function OrganizationsPage() {
     }
   };
 
-  const handleArchive = async (o) => {
-    if (!window.confirm(`Are you sure you want to archive "${o.name}"? This blocks all organization users.`)) return;
+  const handleDelete = async (o) => {
+    if (!window.confirm(`Are you sure you want to delete the organization "${o.name}"? This action cannot be undone.`)) return;
     try {
-      await orgApi.updateOrganization(o.id, { status: "archived" });
+      await orgApi.deleteOrganization(o.id);
       await load();
     } catch (err) {
-      setError(err.response?.data?.error ?? "Could not archive organization");
+      setError(err.response?.data?.error ?? "Could not delete organization");
     }
   };
+
 
   const columns = [
     {
@@ -118,11 +126,27 @@ function OrganizationsPage() {
       key: "type",
       header: "Type",
       render: (o) => (
-        <div className="flex flex-wrap gap-1">
-          <Badge tone={TYPE_TONES[o.type] ?? "beige"}>
-            {TYPE_LABELS[o.type] ?? o.type}
-          </Badge>
-          {o.status === "archived" && <Badge tone="red">Archived</Badge>}
+        <Badge tone={TYPE_TONES[o.type] ?? "beige"}>
+          {TYPE_LABELS[o.type] ?? o.type}
+        </Badge>
+      ),
+    },
+    {
+      key: "status",
+      header: "Status",
+      render: (o) => (
+        <div onClick={(e) => e.stopPropagation()}>
+          <Toggle
+            checked={o.status !== false}
+            onChange={async (val) => {
+              try {
+                await orgApi.updateOrganization(o.id, { status: val });
+                await load();
+              } catch (err) {
+                setError(err.response?.data?.error ?? "Failed to update status");
+              }
+            }}
+          />
         </div>
       ),
     },
@@ -156,17 +180,15 @@ function OrganizationsPage() {
             type="button"
             onClick={() => openEdit(o)}
             title="Edit"
-            disabled={o.status === "archived"}
-            className="w-8 h-8 rounded-lg hover:bg-beige text-ink/60 hover:text-teal flex items-center justify-center transition disabled:opacity-40 disabled:hover:bg-transparent"
+            className="w-8 h-8 rounded-lg hover:bg-beige text-ink/60 hover:text-teal flex items-center justify-center transition"
           >
             <IconEdit size={16} />
           </button>
           <button
             type="button"
-            onClick={() => handleArchive(o)}
-            title="Archive"
-            disabled={o.status === "archived"}
-            className="w-8 h-8 rounded-lg hover:bg-red-50 text-ink/60 hover:text-red-600 flex items-center justify-center transition disabled:opacity-40 disabled:hover:bg-transparent"
+            onClick={() => handleDelete(o)}
+            title="Delete"
+            className="w-8 h-8 rounded-lg hover:bg-red-50 text-ink/60 hover:text-red-600 flex items-center justify-center transition"
           >
             <IconTrash size={16} />
           </button>
@@ -189,15 +211,26 @@ function OrganizationsPage() {
           <div className="font-semibold text-ink">{o.name}</div>
           <p className="font-mono text-teal text-xs mt-1">{o.code}</p>
         </div>
-        <div className="flex gap-1">
+        <div className="flex gap-2 items-center" onClick={(e) => e.stopPropagation()}>
           <Badge tone={TYPE_TONES[o.type]}>
             {TYPE_LABELS[o.type]}
           </Badge>
-          {o.status === "archived" && <Badge tone="red">Archived</Badge>}
+          <Toggle
+            checked={o.status !== false}
+            onChange={async (val) => {
+              try {
+                await orgApi.updateOrganization(o.id, { status: val });
+                await load();
+              } catch (err) {
+                setError(err.response?.data?.error ?? "Failed to update status");
+              }
+            }}
+          />
         </div>
       </div>
     </div>
   );
+
 
   const tableFooter = (
     <>
@@ -327,7 +360,16 @@ function OrganizationsPage() {
               <option value="corporate">Corporate</option>
             </Select>
           </div>
+          <div>
+            <label className="text-xs font-semibold text-ink/50 uppercase block mb-2">Status</label>
+            <Toggle
+              checked={editStatus}
+              onChange={setEditStatus}
+              label={editStatus ? "Active" : "Inactive"}
+            />
+          </div>
         </div>
+
       </Modal>
     </div>
   );

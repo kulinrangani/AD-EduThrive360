@@ -48,7 +48,8 @@ function QuizzesPage() {
         orgApi.listOrganizations(),
       ]);
       setQuizzes(quizList);
-      setOrgs(orgList.filter((o) => o.status !== "archived"));
+      setOrgs(orgList.filter((o) => o.status !== false));
+
     } catch (err) {
       setError(err.response?.data?.error ?? "Failed to load quizzes");
     } finally {

@@ -8,7 +8,7 @@ import {
   IconSchool,
   IconUsers,
 } from "../../component/Icons.jsx";
-import { Avatar, Badge, Button, Card, Input, Modal, Select } from "../../component/UI.jsx";
+import { Avatar, Badge, Button, Card, Input, Modal, Select, Toggle } from "../../component/UI.jsx";
 import * as orgApi from "../../api/organizations.js";
 import * as resultsApi from "../../api/results.js";
 import { ResultViewerModal } from "../../component/ResultViewerModal.jsx";
@@ -208,8 +208,9 @@ function OrganizationDetailPage() {
   const [editOpen, setEditOpen] = useState(false);
   const [editName, setEditName] = useState("");
   const [editType, setEditType] = useState("school");
+  const [editStatus, setEditStatus] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [archiveConfirm, setArchiveConfirm] = useState(false);
+
 
   const [counselorEdit, setCounselorEdit] = useState(null);
   const [counselorName, setCounselorName] = useState("");
@@ -293,6 +294,7 @@ function OrganizationDetailPage() {
   const openEdit = () => {
     setEditName(org.name);
     setEditType(org.type);
+    setEditStatus(org.status ?? true);
     setEditOpen(true);
   };
 
@@ -303,6 +305,7 @@ function OrganizationDetailPage() {
       const updated = await orgApi.updateOrganization(orgId, {
         name: editName,
         type: editType,
+        status: editStatus,
       });
       setOrg((o) => ({ ...o, ...updated }));
       setEditOpen(false);
@@ -313,28 +316,20 @@ function OrganizationDetailPage() {
     }
   };
 
-  const handleArchive = async () => {
-    const memberTotal =
-      (org.stats?.members ?? 0) + (org.stats?.counselors ?? 0) + (org.stats?.admins ?? 0);
-    if (memberTotal > 0 && !archiveConfirm) {
-      setArchiveConfirm(true);
-      setError(
-        "This organization has accounts. Click Archive again to confirm — all org logins will be blocked.",
-      );
-      return;
-    }
+  const handleDelete = async () => {
+    if (!window.confirm(`Are you sure you want to delete the organization "${org.name}"? This action cannot be undone.`)) return;
     setSaving(true);
     setError("");
     try {
-      const updated = await orgApi.updateOrganization(orgId, { status: "archived" });
-      setOrg((o) => ({ ...o, ...updated }));
-      setArchiveConfirm(false);
+      await orgApi.deleteOrganization(orgId);
+      navigate("/organizations");
     } catch (err) {
-      setError(err.response?.data?.error ?? "Could not archive organization");
+      setError(err.response?.data?.error ?? "Could not delete organization");
     } finally {
       setSaving(false);
     }
   };
+
 
   const openCounselorEdit = (person) => {
     setCounselorEdit(person);
@@ -399,7 +394,7 @@ function OrganizationDetailPage() {
 
   const created = org.createdAt ? new Date(org.createdAt).toLocaleString() : "—";
   const updated = org.updatedAt ? new Date(org.updatedAt).toLocaleString() : "—";
-  const orgArchived = org.status === "archived";
+  const orgArchived = org.status === false;
   const memberLabel = org.type === "corporate" ? "Employees" : "Students";
 
   const emptyMessages = {
@@ -436,20 +431,18 @@ function OrganizationDetailPage() {
               <Badge tone={TYPE_TONES[org.type] ?? "beige"}>
                 {TYPE_LABELS[org.type] ?? org.type}
               </Badge>
-              {orgArchived && <Badge tone="red">Archived</Badge>}
+              {orgArchived && <Badge tone="red">Inactive</Badge>}
             </div>
             <p className="text-sm text-ink/50 mt-2 font-mono">ID · {org.id}</p>
           </div>
         </div>
         <div className="flex flex-wrap gap-2 shrink-0">
-          <Button variant="outline" onClick={openEdit} disabled={orgArchived}>
+          <Button variant="outline" onClick={openEdit}>
             Edit organization
           </Button>
-          {!orgArchived && (
-            <Button variant="danger" onClick={handleArchive} disabled={saving}>
-              {archiveConfirm ? "Confirm archive" : "Archive"}
-            </Button>
-          )}
+          <Button variant="danger" onClick={handleDelete} disabled={saving}>
+            Delete organization
+          </Button>
         </div>
       </div>
 
@@ -731,7 +724,16 @@ function OrganizationDetailPage() {
               <option value="corporate">Corporate</option>
             </Select>
           </div>
+          <div>
+            <label className="text-xs font-semibold text-ink/50 uppercase block mb-2">Status</label>
+            <Toggle
+              checked={editStatus}
+              onChange={setEditStatus}
+              label={editStatus ? "Active" : "Inactive"}
+            />
+          </div>
         </div>
+
       </Modal>
 
       <Modal

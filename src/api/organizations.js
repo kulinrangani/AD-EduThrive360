@@ -42,3 +42,9 @@ export async function deactivateOrganizationMember(orgId, userId) {
   const { data } = await apiClient.delete(`/organizations/${orgId}/members/${userId}`);
   return data;
 }
+
+export async function deleteOrganization(id) {
+  const { data } = await apiClient.delete(`/organizations/${id}`);
+  return data;
+}
+
