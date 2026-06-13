@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { IconPlus, IconSearch } from "../../component/Icons.jsx";
 import { Badge, Button, Card, Input, Modal, Select } from "../../component/UI.jsx";
+import { Table } from "../../component/Table";
 import * as quizApi from "../../api/quizzes.js";
 import * as orgApi from "../../api/organizations.js";
 
@@ -73,6 +74,56 @@ function QuizzesPage() {
     }
   };
 
+  const columns = [
+    {
+      key: "title",
+      header: "Quiz",
+      className: "font-semibold",
+    },
+    {
+      key: "organizationId",
+      header: "Organization",
+      className: "text-ink/70",
+      render: (q) => q.organizationId?.name ?? "—",
+    },
+    {
+      key: "status",
+      header: "Status",
+      render: (q) => (
+        <Badge tone={STATUS_TONES[q.status] ?? "beige"}>{q.status}</Badge>
+      ),
+    },
+    {
+      key: "questions",
+      header: "Questions",
+      className: "font-mono",
+      render: (q) => q.settings?.totalQuestions ?? 0,
+    },
+    {
+      key: "updatedAt",
+      header: "Updated",
+      className: "text-ink/70",
+      render: (q) => (q.updatedAt ? new Date(q.updatedAt).toLocaleDateString() : "—"),
+    },
+  ];
+
+  const renderMobileItem = (q) => (
+    <div
+      key={q.id}
+      role="button"
+      tabIndex={0}
+      className="border border-ink/5 rounded-xl p-4 cursor-pointer hover:border-teal/30 hover:bg-beige/30 transition"
+      onClick={() => navigate(`/quizzes/${q.id}`)}
+      onKeyDown={(e) => e.key === "Enter" && navigate(`/quizzes/${q.id}`)}
+    >
+      <div className="font-semibold">{q.title}</div>
+      <p className="text-xs text-ink/50 mt-1">{q.organizationId?.name ?? "—"}</p>
+      <Badge tone={STATUS_TONES[q.status]} className="mt-2">
+        {q.status}
+      </Badge>
+    </div>
+  );
+
   return (
     <div className="space-y-6 fade-in">
       <div className="flex flex-col lg:flex-row lg:items-center gap-3">
@@ -92,9 +143,7 @@ function QuizzesPage() {
       {error && <p className="text-sm text-red-600">{error}</p>}
 
       <Card padded={false}>
-        {loading ? (
-          <p className="p-8 text-sm text-ink/50">Loading quizzes…</p>
-        ) : filtered.length === 0 ? (
+        {filtered.length === 0 && quizzes.length === 0 && !loading ? (
           <div className="p-12 text-center">
             <p className="text-ink/60">No quizzes yet. Create one for an organization.</p>
             <Button className="mt-4" icon={<IconPlus size={16} />} onClick={() => setCreateOpen(true)}>
@@ -102,42 +151,15 @@ function QuizzesPage() {
             </Button>
           </div>
         ) : (
-          <div className="overflow-x-auto scrollbar">
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="text-left text-xs uppercase tracking-wider text-ink/50">
-                  <th className="px-6 py-4 font-semibold">Quiz</th>
-                  <th className="px-6 py-4 font-semibold">Organization</th>
-                  <th className="px-6 py-4 font-semibold">Status</th>
-                  <th className="px-6 py-4 font-semibold">Questions</th>
-                  <th className="px-6 py-4 font-semibold">Updated</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-ink/5">
-                {filtered.map((q) => (
-                  <tr
-                    key={q.id}
-                    className="row-hover cursor-pointer"
-                    onClick={() => navigate(`/quizzes/${q.id}`)}
-                  >
-                    <td className="px-6 py-4 font-semibold">{q.title}</td>
-                    <td className="px-6 py-4 text-ink/70">
-                      {q.organizationId?.name ?? "—"}
-                    </td>
-                    <td className="px-6 py-4">
-                      <Badge tone={STATUS_TONES[q.status] ?? "beige"}>{q.status}</Badge>
-                    </td>
-                    <td className="px-6 py-4 font-mono">
-                      {q.settings?.totalQuestions ?? 0}
-                    </td>
-                    <td className="px-6 py-4 text-ink/70">
-                      {q.updatedAt ? new Date(q.updatedAt).toLocaleDateString() : "—"}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+          <Table
+            columns={columns}
+            data={filtered}
+            onRowClick={(q) => navigate(`/quizzes/${q.id}`)}
+            loading={loading}
+            loadingText="Loading quizzes…"
+            emptyText="No quizzes match your search."
+            renderMobileItem={renderMobileItem}
+          />
         )}
       </Card>
 

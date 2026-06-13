@@ -8,6 +8,7 @@ import {
   IconArrowRight,
 } from "../../component/Icons.jsx";
 import { Button, Input, Select, Badge, Card } from "../../component/UI.jsx";
+import { Table } from "../../component/Table";
 import * as orgApi from "../../api/organizations.js";
 
 const TYPE_LABELS = { school: "School", corporate: "Corporate" };
@@ -50,6 +51,88 @@ function OrganizationsPage() {
 
   const schoolCount = orgs.filter((o) => o.type === "school").length;
   const corpCount = orgs.filter((o) => o.type === "corporate").length;
+
+  const columns = [
+    {
+      key: "name",
+      header: "Organization",
+      render: (o) => (
+        <div className="flex items-center gap-3">
+          <div className="w-9 h-9 rounded-lg bg-beige flex items-center justify-center font-display text-ink">
+            {o.name[0]}
+          </div>
+          <div className="font-semibold">{o.name}</div>
+        </div>
+      ),
+    },
+    {
+      key: "code",
+      header: "Code",
+      render: (o) => (
+        <span className="font-mono text-teal font-semibold">{o.code ?? "—"}</span>
+      ),
+    },
+    {
+      key: "type",
+      header: "Type",
+      render: (o) => (
+        <div className="flex flex-wrap gap-1">
+          <Badge tone={TYPE_TONES[o.type] ?? "beige"}>
+            {TYPE_LABELS[o.type] ?? o.type}
+          </Badge>
+          {o.status === "archived" && <Badge tone="red">Archived</Badge>}
+        </div>
+      ),
+    },
+    {
+      key: "memberCount",
+      header: "Members",
+      className: "font-mono",
+      render: (o) => o.memberCount ?? 0,
+    },
+    {
+      key: "createdAt",
+      header: "Created",
+      className: "text-ink/70",
+      render: (o) => (o.createdAt ? new Date(o.createdAt).toLocaleDateString() : "—"),
+    },
+  ];
+
+  const renderMobileItem = (o) => (
+    <div
+      key={o.id}
+      role="button"
+      tabIndex={0}
+      className="border border-ink/5 rounded-xl p-4 cursor-pointer hover:border-teal/30 hover:bg-beige/30 transition"
+      onClick={() => navigate(`/organizations/${o.id}`)}
+      onKeyDown={(e) => e.key === "Enter" && navigate(`/organizations/${o.id}`)}
+    >
+      <div className="font-semibold">{o.name}</div>
+      <p className="font-mono text-teal text-sm mt-1">{o.code}</p>
+      <Badge tone={TYPE_TONES[o.type]} className="mt-2">
+        {TYPE_LABELS[o.type]}
+      </Badge>
+    </div>
+  );
+
+  const tableFooter = (
+    <>
+      <div className="text-xs text-ink/50">
+        Showing <span className="font-semibold text-ink">{filtered.length}</span> of {orgs.length}
+      </div>
+      <div className="flex gap-1 opacity-40 pointer-events-none">
+        <button type="button" className="w-9 h-9 rounded-lg hover:bg-beige text-ink/50 flex items-center justify-center">
+          <IconArrowLeft size={14} />
+        </button>
+        <button type="button" className="w-9 h-9 rounded-lg bg-ink text-beige text-sm font-semibold">
+          1
+        </button>
+        <button type="button" className="w-9 h-9 rounded-lg hover:bg-beige text-ink/50 flex items-center justify-center">
+          <IconArrowRight size={14} />
+        </button>
+      </div>
+    </>
+  );
 
   return (
     <div className="space-y-6 fade-in">
@@ -98,9 +181,7 @@ function OrganizationsPage() {
       </div>
 
       <Card padded={false}>
-        {loading ? (
-          <p className="p-8 text-sm text-ink/50">Loading organizations…</p>
-        ) : filtered.length === 0 && orgs.length === 0 ? (
+        {filtered.length === 0 && orgs.length === 0 && !loading ? (
           <div className="p-12 text-center">
             <p className="text-ink/60">No organizations yet.</p>
             <Button
@@ -112,91 +193,16 @@ function OrganizationsPage() {
             </Button>
           </div>
         ) : (
-          <>
-            <div className="hidden md:block overflow-x-auto scrollbar">
-              <table className="w-full text-sm">
-                <thead>
-                  <tr className="text-left text-xs uppercase tracking-wider text-ink/50">
-                    <th className="px-6 py-4 font-semibold">Organization</th>
-                    <th className="px-6 py-4 font-semibold">Code</th>
-                    <th className="px-6 py-4 font-semibold">Type</th>
-                    <th className="px-6 py-4 font-semibold">Members</th>
-                    <th className="px-6 py-4 font-semibold">Created</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-ink/5">
-                  {filtered.map((o) => (
-                    <tr
-                      key={o.id}
-                      className="row-hover cursor-pointer"
-                      onClick={() => navigate(`/organizations/${o.id}`)}
-                    >
-                      <td className="px-6 py-4">
-                        <div className="flex items-center gap-3">
-                          <div className="w-9 h-9 rounded-lg bg-beige flex items-center justify-center font-display text-ink">
-                            {o.name[0]}
-                          </div>
-                          <div className="font-semibold">{o.name}</div>
-                        </div>
-                      </td>
-                      <td className="px-6 py-4">
-                        <span className="font-mono text-teal font-semibold">{o.code ?? "—"}</span>
-                      </td>
-                      <td className="px-6 py-4">
-                        <div className="flex flex-wrap gap-1">
-                          <Badge tone={TYPE_TONES[o.type] ?? "beige"}>
-                            {TYPE_LABELS[o.type] ?? o.type}
-                          </Badge>
-                          {o.status === "archived" && <Badge tone="red">Archived</Badge>}
-                        </div>
-                      </td>
-                      <td className="px-6 py-4 font-mono">{o.memberCount ?? 0}</td>
-                      <td className="px-6 py-4 text-ink/70">
-                        {o.createdAt ? new Date(o.createdAt).toLocaleDateString() : "—"}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-            <div className="md:hidden p-4 space-y-3">
-              {filtered.map((o) => (
-                <div
-                  key={o.id}
-                  role="button"
-                  tabIndex={0}
-                  className="border border-ink/5 rounded-xl p-4 cursor-pointer hover:border-teal/30 hover:bg-beige/30 transition"
-                  onClick={() => navigate(`/organizations/${o.id}`)}
-                  onKeyDown={(e) => e.key === "Enter" && navigate(`/organizations/${o.id}`)}
-                >
-                  <div className="font-semibold">{o.name}</div>
-                  <p className="font-mono text-teal text-sm mt-1">{o.code}</p>
-                  <Badge tone={TYPE_TONES[o.type]} className="mt-2">
-                    {TYPE_LABELS[o.type]}
-                  </Badge>
-                </div>
-              ))}
-            </div>
-            {filtered.length === 0 && orgs.length > 0 && (
-              <p className="p-8 text-center text-sm text-ink/50">No organizations match your filters.</p>
-            )}
-            <div className="flex items-center justify-between px-6 py-4 border-t border-ink/5">
-              <div className="text-xs text-ink/50">
-                Showing <span className="font-semibold text-ink">{filtered.length}</span> of {orgs.length}
-              </div>
-              <div className="flex gap-1 opacity-40 pointer-events-none">
-                <button type="button" className="w-9 h-9 rounded-lg hover:bg-beige text-ink/50 flex items-center justify-center">
-                  <IconArrowLeft size={14} />
-                </button>
-                <button type="button" className="w-9 h-9 rounded-lg bg-ink text-beige text-sm font-semibold">
-                  1
-                </button>
-                <button type="button" className="w-9 h-9 rounded-lg hover:bg-beige text-ink/50 flex items-center justify-center">
-                  <IconArrowRight size={14} />
-                </button>
-              </div>
-            </div>
-          </>
+          <Table
+            columns={columns}
+            data={filtered}
+            onRowClick={(o) => navigate(`/organizations/${o.id}`)}
+            loading={loading}
+            loadingText="Loading organizations…"
+            emptyText="No organizations match your filters."
+            renderMobileItem={renderMobileItem}
+            footer={tableFooter}
+          />
         )}
       </Card>
     </div>
