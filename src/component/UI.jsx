@@ -1,4 +1,5 @@
 // Shared UI primitives
+import { createPortal } from 'react-dom';
 import { IconChevronDown, IconX } from './Icons.jsx';
 
 const cn = (...a) => a.filter(Boolean).join(' ');
@@ -104,7 +105,7 @@ function Toggle({ checked, onChange, label }) {
 
 function Modal({ open, onClose, title, subtitle, children, footer, width='max-w-lg' }) {
   if (!open) return null;
-  return (
+  return createPortal(
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 fade-in" onClick={onClose}>
       <div className="absolute inset-0 bg-ink/40 backdrop-blur-sm" />
       <div
@@ -123,9 +124,11 @@ function Modal({ open, onClose, title, subtitle, children, footer, width='max-w-
         <div className="px-6 py-6">{children}</div>
         {footer && <div className="px-6 py-4 border-t border-ink/5 flex items-center justify-end gap-3 bg-beige/40 rounded-b-2xl">{footer}</div>}
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }
+
 
 // Avatar — colored initial, no-art-required
 function Avatar({ name, size=36, tone }) {

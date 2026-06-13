@@ -6,8 +6,11 @@ import {
   IconPlus,
   IconArrowLeft,
   IconArrowRight,
+  IconEye,
+  IconEdit,
+  IconTrash,
 } from "../../component/Icons.jsx";
-import { Button, Input, Select, Badge, Card } from "../../component/UI.jsx";
+import { Button, Input, Select, Badge, Card, Modal } from "../../component/UI.jsx";
 import { Table } from "../../component/Table";
 import * as orgApi from "../../api/organizations.js";
 
@@ -21,6 +24,13 @@ function OrganizationsPage() {
   const [error, setError] = useState("");
   const [query, setQuery] = useState("");
   const [typeFilter, setTypeFilter] = useState("All types");
+
+  // Edit organization state
+  const [editOpen, setEditOpen] = useState(false);
+  const [editOrg, setEditOrg] = useState(null);
+  const [editName, setEditName] = useState("");
+  const [editType, setEditType] = useState("school");
+  const [saving, setSaving] = useState(false);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -51,6 +61,38 @@ function OrganizationsPage() {
 
   const schoolCount = orgs.filter((o) => o.type === "school").length;
   const corpCount = orgs.filter((o) => o.type === "corporate").length;
+
+  const openEdit = (o) => {
+    setEditOrg(o);
+    setEditName(o.name);
+    setEditType(o.type);
+    setEditOpen(true);
+  };
+
+  const saveEdit = async () => {
+    if (!editOrg) return;
+    setSaving(true);
+    setError("");
+    try {
+      await orgApi.updateOrganization(editOrg.id, { name: editName.trim(), type: editType });
+      setEditOpen(false);
+      await load();
+    } catch (err) {
+      setError(err.response?.data?.error ?? "Could not update organization");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleArchive = async (o) => {
+    if (!window.confirm(`Are you sure you want to archive "${o.name}"? This blocks all organization users.`)) return;
+    try {
+      await orgApi.updateOrganization(o.id, { status: "archived" });
+      await load();
+    } catch (err) {
+      setError(err.response?.data?.error ?? "Could not archive organization");
+    }
+  };
 
   const columns = [
     {
@@ -96,6 +138,41 @@ function OrganizationsPage() {
       className: "text-ink/70",
       render: (o) => (o.createdAt ? new Date(o.createdAt).toLocaleDateString() : "—"),
     },
+    {
+      key: "actions",
+      header: "Actions",
+      className: "text-right whitespace-nowrap",
+      render: (o) => (
+        <div className="flex justify-end gap-1.5" onClick={(e) => e.stopPropagation()}>
+          <button
+            type="button"
+            onClick={() => navigate(`/organizations/${o.id}`)}
+            title="View Details"
+            className="w-8 h-8 rounded-lg hover:bg-beige text-ink/60 hover:text-teal flex items-center justify-center transition"
+          >
+            <IconEye size={16} />
+          </button>
+          <button
+            type="button"
+            onClick={() => openEdit(o)}
+            title="Edit"
+            disabled={o.status === "archived"}
+            className="w-8 h-8 rounded-lg hover:bg-beige text-ink/60 hover:text-teal flex items-center justify-center transition disabled:opacity-40 disabled:hover:bg-transparent"
+          >
+            <IconEdit size={16} />
+          </button>
+          <button
+            type="button"
+            onClick={() => handleArchive(o)}
+            title="Archive"
+            disabled={o.status === "archived"}
+            className="w-8 h-8 rounded-lg hover:bg-red-50 text-ink/60 hover:text-red-600 flex items-center justify-center transition disabled:opacity-40 disabled:hover:bg-transparent"
+          >
+            <IconTrash size={16} />
+          </button>
+        </div>
+      ),
+    },
   ];
 
   const renderMobileItem = (o) => (
@@ -107,11 +184,18 @@ function OrganizationsPage() {
       onClick={() => navigate(`/organizations/${o.id}`)}
       onKeyDown={(e) => e.key === "Enter" && navigate(`/organizations/${o.id}`)}
     >
-      <div className="font-semibold">{o.name}</div>
-      <p className="font-mono text-teal text-sm mt-1">{o.code}</p>
-      <Badge tone={TYPE_TONES[o.type]} className="mt-2">
-        {TYPE_LABELS[o.type]}
-      </Badge>
+      <div className="flex justify-between items-start">
+        <div>
+          <div className="font-semibold text-ink">{o.name}</div>
+          <p className="font-mono text-teal text-xs mt-1">{o.code}</p>
+        </div>
+        <div className="flex gap-1">
+          <Badge tone={TYPE_TONES[o.type]}>
+            {TYPE_LABELS[o.type]}
+          </Badge>
+          {o.status === "archived" && <Badge tone="red">Archived</Badge>}
+        </div>
+      </div>
     </div>
   );
 
@@ -205,6 +289,46 @@ function OrganizationsPage() {
           />
         )}
       </Card>
+
+      {/* Edit Organization Modal */}
+      <Modal
+        open={editOpen}
+        onClose={() => setEditOpen(false)}
+        title="Edit organization"
+        footer={
+          <>
+            <Button variant="ghost" onClick={() => setEditOpen(false)}>
+              Cancel
+            </Button>
+            <Button onClick={saveEdit} disabled={saving}>
+              {saving ? "Saving…" : "Save changes"}
+            </Button>
+          </>
+        }
+      >
+        <div className="space-y-4">
+          <div>
+            <label className="text-xs font-semibold text-ink/50 uppercase">Name</label>
+            <Input
+              className="mt-2"
+              value={editName}
+              onChange={(e) => setEditName(e.target.value)}
+              required
+            />
+          </div>
+          <div>
+            <label className="text-xs font-semibold text-ink/50 uppercase">Type</label>
+            <Select
+              className="mt-2"
+              value={editType}
+              onChange={(e) => setEditType(e.target.value)}
+            >
+              <option value="school">School</option>
+              <option value="corporate">Corporate</option>
+            </Select>
+          </div>
+        </div>
+      </Modal>
     </div>
   );
 }
