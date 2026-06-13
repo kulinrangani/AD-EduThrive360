@@ -52,7 +52,7 @@ export function Table<T extends { id?: string | number; _id?: string | number }>
               {columns.map((col) => (
                 <th
                   key={col.key}
-                  className={`px-6 py-4 font-semibold ${col.className ?? ""}`}
+                  className={`px-6 py-2.5 font-semibold ${col.className ?? ""}`}
                 >
                   {col.header}
                 </th>
@@ -71,7 +71,7 @@ export function Table<T extends { id?: string | number; _id?: string | number }>
                   {columns.map((col) => (
                     <td
                       key={col.key}
-                      className={`px-6 py-4 align-middle ${col.className ?? ""}`}
+                      className={`px-6 py-2.5 align-middle ${col.className ?? ""}`}
                     >
                       {col.render ? col.render(row, index) : (row as any)[col.key]}
                     </td>
