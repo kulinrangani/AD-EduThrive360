@@ -1,8 +1,8 @@
 import { useCallback, useEffect, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
-import { IconArrowLeft, IconPlus, IconX } from "../component/Icons.jsx";
-import { Badge, Button, Card, Input, Select } from "../component/UI.jsx";
-import * as quizApi from "../api/quizzes.js";
+import { IconArrowLeft, IconPlus, IconX } from "../../component/Icons.jsx";
+import { Badge, Button, Card, Input, Select } from "../../component/UI.jsx";
+import * as quizApi from "../../api/quizzes.js";
 
 const STEPS = ["metadata", "groups", "questions", "quotes"];
 const STEP_LABELS = {

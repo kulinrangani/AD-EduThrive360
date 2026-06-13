@@ -1,9 +1,9 @@
 import { useCallback, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { IconPlus, IconSearch } from "../component/Icons.jsx";
-import { Badge, Button, Card, Input, Modal, Select } from "../component/UI.jsx";
-import * as quizApi from "../api/quizzes.js";
-import * as orgApi from "../api/organizations.js";
+import { IconPlus, IconSearch } from "../../component/Icons.jsx";
+import { Badge, Button, Card, Input, Modal, Select } from "../../component/UI.jsx";
+import * as quizApi from "../../api/quizzes.js";
+import * as orgApi from "../../api/organizations.js";
 
 const STATUS_TONES = {
   draft: "beige",

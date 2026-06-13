@@ -7,9 +7,9 @@ import {
   IconLock,
   IconSpark,
   IconSchool,
-} from "../component/Icons.jsx";
-import { Badge, Button, Card, Input, Select } from "../component/UI.jsx";
-import * as orgApi from "../api/organizations.js";
+} from "../../component/Icons.jsx";
+import { Badge, Button, Card, Input, Select } from "../../component/UI.jsx";
+import * as orgApi from "../../api/organizations.js";
 
 function SuccessView({ result, onDone }) {
   const { organization, admin } = result;

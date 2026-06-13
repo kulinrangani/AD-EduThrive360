@@ -6,9 +6,9 @@ import {
   IconPlus,
   IconArrowLeft,
   IconArrowRight,
-} from "../component/Icons.jsx";
-import { Button, Input, Select, Badge, Card } from "../component/UI.jsx";
-import * as orgApi from "../api/organizations.js";
+} from "../../component/Icons.jsx";
+import { Button, Input, Select, Badge, Card } from "../../component/UI.jsx";
+import * as orgApi from "../../api/organizations.js";
 
 const TYPE_LABELS = { school: "School", corporate: "Corporate" };
 const TYPE_TONES = { school: "teal", corporate: "ink" };

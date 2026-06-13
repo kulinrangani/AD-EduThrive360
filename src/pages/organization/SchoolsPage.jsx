@@ -1,8 +1,8 @@
 import { useState } from "react";
 import {
   IconCheck, IconMail, IconSpark, IconSearch, IconDownload, IconPlus, IconEdit, IconTrash, IconDots, IconArrowLeft, IconArrowRight,
-} from "../component/Icons.jsx";
-import { Modal, Button, Input, Select, Badge, Card } from "../component/UI.jsx";
+} from "../../component/Icons.jsx";
+import { Modal, Button, Input, Select, Badge, Card } from "../../component/UI.jsx";
 
 const SCHOOLS = [
   { id: 1, name: "Willowbrook International", city: "Mumbai", students: 1240, counselors: 14, plan: "Enterprise", status: "Active", wellness: 82 },

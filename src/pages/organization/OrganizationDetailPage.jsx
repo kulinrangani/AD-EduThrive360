@@ -7,11 +7,11 @@ import {
   IconSpark,
   IconSchool,
   IconUsers,
-} from "../component/Icons.jsx";
-import { Avatar, Badge, Button, Card, Input, Modal, Select } from "../component/UI.jsx";
-import * as orgApi from "../api/organizations.js";
-import * as resultsApi from "../api/results.js";
-import { ResultViewerModal } from "../component/ResultViewerModal.jsx";
+} from "../../component/Icons.jsx";
+import { Avatar, Badge, Button, Card, Input, Modal, Select } from "../../component/UI.jsx";
+import * as orgApi from "../../api/organizations.js";
+import * as resultsApi from "../../api/results.js";
+import { ResultViewerModal } from "../../component/ResultViewerModal.jsx";
 
 const TYPE_LABELS = { school: "School", corporate: "Corporate" };
 const TYPE_TONES = { school: "teal", corporate: "ink" };
