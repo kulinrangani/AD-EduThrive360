@@ -13,14 +13,14 @@ import { cn, Avatar } from './UI.jsx';
 function Sidebar({ current, onNav, collapsed, onToggleCollapsed, onLogout, user }) {
   const roleLabel = user?.role === 'super_admin' ? 'Super Admin' : user?.role === 'org_admin' ? 'Org Admin' : 'Admin';
   const items = [
-    { key: 'dashboard', label: 'Dashboard', icon: <IconHome size={20}/> },
-    { key: 'quizzes', label: 'Quizzes', icon: <IconChart size={20}/> },
-    { key: 'organizations', label: 'Organizations', icon: <IconSchool size={20}/> },
-    { key: 'users',     label: 'Users',     icon: <IconUsers size={20}/> },
-    { key: 'wellness',  label: 'Wellness',  icon: <IconHeart size={20}/> },
-    { key: 'alerts',    label: 'Alerts',    icon: <IconBell size={20}/>, badge: '3', badgeTone: 'orange' },
-    { key: 'reports',   label: 'Reports',   icon: <IconChart size={20}/> },
-    { key: 'settings',  label: 'Settings',  icon: <IconGear size={20}/> },
+    { key: 'dashboard', label: 'Dashboard', icon: <IconHome size={20} /> },
+    { key: 'quizzes', label: 'Quizzes', icon: <IconChart size={20} /> },
+    { key: 'organizations', label: 'Organizations', icon: <IconSchool size={20} /> },
+    { key: 'users', label: 'Users', icon: <IconUsers size={20} /> },
+    // { key: 'wellness',  label: 'Wellness',  icon: <IconHeart size={20}/> },
+    // { key: 'alerts', label: 'Alerts', icon: <IconBell size={20} />, badge: '3', badgeTone: 'orange' },
+    { key: 'reports', label: 'Reports', icon: <IconChart size={20} /> },
+    { key: 'settings', label: 'Settings', icon: <IconGear size={20} /> },
   ];
   return (
     <aside
@@ -83,7 +83,7 @@ function Sidebar({ current, onNav, collapsed, onToggleCollapsed, onLogout, user 
         <div className="px-4 pb-4 shrink-0">
           <div className="rounded-2xl p-4 bg-gradient-to-br from-teal/30 to-orange/20 border border-white/5">
             <div className="flex items-center gap-2 mb-2">
-              <span className="w-2 h-2 rounded-full bg-yellow pulse-dot"/>
+              <span className="w-2 h-2 rounded-full bg-yellow pulse-dot" />
               <span className="text-[11px] uppercase tracking-wider text-beige/80 font-semibold">System healthy</span>
             </div>
             <p className="text-sm text-beige/90 leading-snug">
@@ -97,7 +97,7 @@ function Sidebar({ current, onNav, collapsed, onToggleCollapsed, onLogout, user 
 
       {/* User footer — sticky bottom */}
       <div className={cn('border-t border-white/5 p-3 flex items-center gap-3 shrink-0', collapsed && 'justify-center')}>
-        <Avatar name={user?.fullName ?? 'Admin'} size={38}/>
+        <Avatar name={user?.fullName ?? 'Admin'} size={38} />
         {!collapsed && (
           <div className="min-w-0 flex-1">
             <div className="text-sm font-semibold truncate">{user?.fullName ?? 'Signed in'}</div>
@@ -106,7 +106,7 @@ function Sidebar({ current, onNav, collapsed, onToggleCollapsed, onLogout, user 
         )}
         {!collapsed && (
           <button onClick={onLogout} title="Logout" className="w-9 h-9 rounded-lg hover:bg-white/5 flex items-center justify-center text-beige/60 hover:text-beige transition">
-            <IconLogout size={18}/>
+            <IconLogout size={18} />
           </button>
         )}
       </div>
