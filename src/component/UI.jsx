@@ -4,7 +4,7 @@ import { IconChevronDown, IconX } from './Icons.jsx';
 
 const cn = (...a) => a.filter(Boolean).join(' ');
 
-function Button({ children, variant='primary', size='md', icon, iconRight, className='', ...rest }) {
+function Button({ children, variant='primary', size='md', icon=undefined, iconRight=undefined, className='', ...rest }) {
   const sizes = {
     sm: 'h-9 px-3.5 text-sm gap-1.5',
     md: 'h-11 px-5 text-sm gap-2',

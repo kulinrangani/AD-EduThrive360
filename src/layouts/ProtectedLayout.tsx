@@ -3,6 +3,7 @@ import { Navigate, Outlet, useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext.jsx";
 import { Sidebar } from "../component/Sidebar.jsx";
 import { Navbar } from "../component/Navbar.jsx";
+import { Modal, Button } from "../component/UI.jsx";
 
 const APP_PAGE_SET = new Set([
   "dashboard",
@@ -36,13 +37,14 @@ const PAGE_TITLES: Record<string, PageTitle> = {
 };
 
 export function ProtectedLayout() {
-  const { isAuthenticated, loading, user, logout } = useAuth();
+  const { isAuthenticated, loading, user, logout } = useAuth() as any;
   const navigate = useNavigate();
   const location = useLocation();
   const [collapsed, setCollapsed] = useState(
     () => localStorage.getItem("et_collapsed") === "1"
   );
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
 
   useEffect(() => {
     localStorage.setItem("et_collapsed", collapsed ? "1" : "0");
@@ -86,10 +88,10 @@ export function ProtectedLayout() {
       <div className="hidden lg:flex sticky top-0 h-screen relative z-40">
         <Sidebar
           current={page}
-          onNav={(k) => navigate(`/${k}`)}
+          onNav={(k: string) => navigate(`/${k}`)}
           collapsed={collapsed}
           onToggleCollapsed={() => setCollapsed((c) => !c)}
-          onLogout={handleLogout}
+          onLogout={() => setShowLogoutConfirm(true)}
           user={user}
         />
         <button
@@ -123,13 +125,13 @@ export function ProtectedLayout() {
           <div className="relative flex" onClick={(e) => e.stopPropagation()}>
             <Sidebar
               current={page}
-              onNav={(k) => {
+              onNav={(k: string) => {
                 navigate(`/${k}`);
                 setMobileOpen(false);
               }}
               collapsed={false}
               onToggleCollapsed={() => {}}
-              onLogout={handleLogout}
+              onLogout={() => setShowLogoutConfirm(true)}
               user={user}
             />
           </div>
@@ -160,6 +162,28 @@ export function ProtectedLayout() {
           </div>
         </footer>
       </main>
+
+      <Modal
+        open={showLogoutConfirm}
+        onClose={() => setShowLogoutConfirm(false)}
+        title="Confirm Sign Out"
+        subtitle="Are you sure you want to sign out?"
+        footer={
+          <>
+            <Button variant="ghost" onClick={() => setShowLogoutConfirm(false)}>
+              Cancel
+            </Button>
+            <Button variant="danger" onClick={handleLogout}>
+              Sign out
+            </Button>
+          </>
+        }
+      >
+        <p className="text-sm text-ink/70">
+          You will need to sign in again to access the super admin console.
+        </p>
+      </Modal>
+
     </div>
   );
 }

@@ -19,7 +19,7 @@ import { useAuth } from "./context/AuthContext.jsx";
 function LoginRouteWrapper() {
   const navigate = useNavigate();
   const location = useLocation();
-  const { login } = useAuth();
+  const { login } = useAuth() as any;
 
   return (
     <LoginPage
