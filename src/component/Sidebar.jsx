@@ -33,11 +33,11 @@ function Sidebar({ current, onNav, collapsed, onToggleCollapsed, onLogout, user 
       {/* Logo — sticky top */}
       <div className="px-5 pt-6 pb-5 flex items-center gap-3 shrink-0">
         <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-teal to-yellow flex items-center justify-center shrink-0 shadow-lift">
-          <span className="font-display text-ink font-bold text-lg">E</span>
+          <span className="font-display text-ink font-bold text-lg">EM</span>
         </div>
         {!collapsed && (
           <div className="min-w-0">
-            <div className="font-display text-[17px] leading-none text-beige">EduThrive<span className="text-orange">360</span></div>
+            <div className="font-display text-[17px] leading-none text-beige">EM<span className="text-orange">360</span></div>
             <div className="text-[11px] text-beige/50 mt-1 tracking-wide uppercase">{roleLabel}</div>
           </div>
         )}

@@ -146,7 +146,7 @@ export function ProtectedLayout() {
           <Outlet />
         </div>
         <footer className="px-8 py-5 text-xs text-ink/40 flex items-center justify-between border-t border-ink/5">
-          <div>© 2026 EduThrive360 · India region</div>
+          <div>© 2026 EM360 · India region</div>
           <div className="flex gap-4">
             <a href="#" className="hover:text-teal">
               Status

@@ -25,10 +25,10 @@ function AuthIllustration() {
         <div>
           <div className="flex items-center gap-3">
             <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-teal to-yellow flex items-center justify-center shadow-lift">
-              <span className="font-display text-ink font-bold text-xl">E</span>
+              <span className="font-display text-ink font-bold text-xl">EM</span>
             </div>
             <div>
-              <div className="font-display text-xl text-beige">EduThrive<span className="text-orange">360</span></div>
+              <div className="font-display text-xl text-beige">EM<span className="text-orange">360</span></div>
               <div className="text-[11px] text-beige/50 tracking-wide uppercase">Super Admin</div>
             </div>
           </div>
@@ -108,9 +108,9 @@ function LoginPage({ onLogin, onForgot }) {
         <div className="p-8 md:p-12 lg:p-14 flex flex-col justify-center">
           <div className="lg:hidden mb-8 flex items-center gap-3">
             <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-teal to-yellow flex items-center justify-center">
-              <span className="font-display text-ink font-bold">E</span>
+              <span className="font-display text-ink font-bold">EM</span>
             </div>
-            <div className="font-display text-lg">EduThrive<span className="text-orange">360</span></div>
+            <div className="font-display text-lg">EM<span className="text-orange">360</span></div>
           </div>
 
           <Badge tone="teal" className="self-start mb-4">Super Admin</Badge>
@@ -124,7 +124,7 @@ function LoginPage({ onLogin, onForgot }) {
           <form className="mt-8 space-y-4" onSubmit={handleSubmit}>
             <div>
               <label className="text-xs uppercase tracking-wider text-ink/50 font-semibold">Work email</label>
-              <Input className="mt-1.5" icon={<IconMail size={16}/>} type="email" value={email} onChange={(e)=>setEmail(e.target.value)} placeholder="admin@eduthrive.io" required autoComplete="email"/>
+              <Input className="mt-1.5" icon={<IconMail size={16}/>} type="email" value={email} onChange={(e)=>setEmail(e.target.value)} placeholder="admin@em360.io" required autoComplete="email"/>
             </div>
             <div>
               <div className="flex items-center justify-between">
@@ -156,7 +156,7 @@ function LoginPage({ onLogin, onForgot }) {
             <Button variant="outline" size="lg" className="w-full">Continue with SSO</Button>
           </form>
 
-          <p className="text-xs text-ink/50 mt-8">Protected by EduThrive Safety Cloud · India region · SOC 2 Type II</p>
+          <p className="text-xs text-ink/50 mt-8">Protected by EM360 Safety Cloud · India region · SOC 2 Type II</p>
         </div>
       </div>
     </div>
@@ -218,7 +218,7 @@ function ForgotPage({ onBack }) {
               </form>
 
               <div className="mt-8 p-4 rounded-xl bg-beige/60 text-sm text-ink/70">
-                Still locked out? Contact <a className="text-teal font-semibold underline-offset-2 hover:underline" href="#">security@eduthrive.io</a> for manual verification.
+                Still locked out? Contact <a className="text-teal font-semibold underline-offset-2 hover:underline" href="#">security@em360.io</a> for manual verification.
               </div>
             </>
           ) : (

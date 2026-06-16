@@ -1,4 +1,4 @@
-# EduThrive360 Admin
+# EM360 Admin
 
 Super-admin console for organizations, quiz builder, and platform analytics.
 

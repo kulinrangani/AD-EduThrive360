@@ -20,7 +20,7 @@ function Navbar({ title, subtitle, onOpenMobileNav }) {
 
         <div className="flex-1 min-w-0">
           <div className="hidden md:flex items-center gap-2 text-xs text-ink/50 mb-0.5">
-            <span>EduThrive360</span>
+            <span>EM360</span>
             <IconChevron size={12} />
             <span className="text-ink/70 font-medium">{title}</span>
           </div>
