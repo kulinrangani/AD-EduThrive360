@@ -4,9 +4,9 @@ import { IconSchool, IconUsers, IconHeart, IconBell, IconArrowRight, IconFlag } 
 import { cn, Button, Card, Badge, Sparkline } from "../component/UI.jsx";
 import * as analyticsApi from "../api/analytics.js";
 
-function StatCard({ label, value, delta, tone, icon, spark }) {
-  return (
-    <Card className="relative overflow-hidden">
+function StatCard({ label, value, delta, tone, icon, spark, to }) {
+  const content = (
+    <Card className={cn("relative overflow-hidden transition-all duration-200 h-full", to && "hover:shadow-lift hover:-translate-y-0.5 hover:border-teal/30 cursor-pointer")}>
       <div className="flex items-start justify-between gap-4">
         <div>
           <div className="text-xs uppercase tracking-wider text-ink/50 font-semibold">{label}</div>
@@ -29,6 +29,16 @@ function StatCard({ label, value, delta, tone, icon, spark }) {
       )}
     </Card>
   );
+
+  if (to) {
+    return (
+      <Link to={to} className="block no-underline h-full">
+        {content}
+      </Link>
+    );
+  }
+
+  return content;
 }
 
 function DashboardPage() {
@@ -105,24 +115,28 @@ function DashboardPage() {
           tone="bg-teal/10 text-teal"
           icon={<IconSchool size={22} />}
           spark={sparkAttempts}
+          to="/organizations"
         />
         <StatCard
           label="Members"
           value={String(data?.members ?? "—")}
           tone="bg-orange/15 text-orange"
           icon={<IconUsers size={22} />}
+          to="/users"
         />
         <StatCard
           label="Published quizzes"
           value={String(data?.publishedQuizzes ?? "—")}
           tone="bg-yellow/25 text-ink"
           icon={<IconHeart size={22} />}
+          to="/quizzes"
         />
         <StatCard
           label="High risk (latest)"
           value={String(risk.High ?? 0)}
           tone="bg-ink text-beige"
           icon={<IconBell size={22} />}
+          to="/alerts"
         />
       </div>
 

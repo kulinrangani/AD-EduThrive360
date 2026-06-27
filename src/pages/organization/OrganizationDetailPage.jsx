@@ -405,7 +405,7 @@ function OrganizationDetailPage() {
   };
 
   return (
-    <div className="fade-in space-y-6 max-w-5xl">
+    <div className="fade-in space-y-6 ">
       <Link
         to="/organizations"
         className="inline-flex items-center gap-2 text-sm text-ink/60 hover:text-teal font-medium"
