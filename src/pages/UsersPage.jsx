@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { useSearchParams } from "react-router-dom";
+import { useSearchParams, useLocation } from "react-router-dom";
 import { cn, Input, Select, Button, Card, Avatar, Badge } from "../component/UI.jsx";
 import { IconSearch, IconFilter, IconPlus, IconDots, IconArrowLeft, IconArrowRight } from "../component/Icons.jsx";
 import * as orgApi from "../api/organizations.js";
@@ -9,6 +9,9 @@ import { Table } from "../component/Table";
 
 function UsersPage() {
   const [searchParams, setSearchParams] = useSearchParams();
+  const location = useLocation();
+  const [refetchTrigger, setRefetchTrigger] = useState(0);
+
   const [tab, setTab] = useState(() => {
     const t = searchParams.get("tab");
     return t === "counselors" || t === "members" ? t : "members";
@@ -19,6 +22,13 @@ function UsersPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [viewResultId, setViewResultId] = useState(null);
+
+  useEffect(() => {
+    if (location.state?.refetch) {
+      setRefetchTrigger((prev) => prev + 1);
+      window.history.replaceState({}, document.title);
+    }
+  }, [location]);
 
   useEffect(() => {
     const q = searchParams.get("search") || "";
@@ -80,7 +90,7 @@ function UsersPage() {
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [refetchTrigger]);
 
   const counselors = useMemo(() => {
     const list = [];
