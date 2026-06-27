@@ -9,6 +9,7 @@ import { OrganizationDetailPage } from "./pages/organization/OrganizationDetailP
 import { QuizzesPage } from "./pages/quiz/QuizzesPage.jsx";
 import { QuizBuilderPage } from "./pages/quiz/QuizBuilderPage.jsx";
 import { UsersPage } from "./pages/UsersPage.jsx";
+import { ProfilePage } from "./pages/ProfilePage.jsx";
 import { SettingsPage } from "./pages/SettingsPage.jsx";
 import { WellnessPage } from "./pages/WellnessPage.jsx";
 import { AlertsPage } from "./pages/AlertsPage.jsx";
@@ -54,7 +55,7 @@ export const router = createBrowserRouter([
       },
     ],
   },
-  
+
   // Protected Routes Layout
   {
     path: "/",
@@ -91,6 +92,10 @@ export const router = createBrowserRouter([
       {
         path: "users",
         element: <UsersPage />,
+      },
+      {
+        path: "profile",
+        element: <ProfilePage />,
       },
       {
         path: "settings",

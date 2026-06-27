@@ -21,3 +21,8 @@ export async function resetPassword(token, password) {
   const { data } = await apiClient.post("/auth/reset-password", { token, password });
   return data;
 }
+
+export async function updateProfile(payload) {
+  const { data } = await apiClient.put("/auth/profile", payload);
+  return data.user;
+}

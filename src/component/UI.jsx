@@ -131,7 +131,17 @@ function Modal({ open, onClose, title, subtitle, children, footer, width='max-w-
 
 
 // Avatar — colored initial, no-art-required
-function Avatar({ name, size=36, tone }) {
+function Avatar({ name, size=36, tone, src }) {
+  if (src) {
+    return (
+      <img
+        src={src}
+        alt={name}
+        className="inline-block rounded-full object-cover border border-ink/5"
+        style={{ width: size, height: size }}
+      />
+    );
+  }
   const initials = name.split(' ').map(s => s[0]).slice(0,2).join('').toUpperCase();
   const tones = ['bg-teal text-white','bg-orange text-white','bg-ink text-beige','bg-yellow text-ink','bg-tealDeep text-white'];
   const t = tone ?? tones[(name.charCodeAt(0) + name.length) % tones.length];

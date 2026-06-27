@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { useSearchParams } from "react-router-dom";
 import { cn, Input, Select, Button, Card, Avatar, Badge } from "../component/UI.jsx";
 import { IconSearch, IconFilter, IconPlus, IconDots, IconArrowLeft, IconArrowRight } from "../component/Icons.jsx";
 import * as orgApi from "../api/organizations.js";
@@ -7,13 +8,48 @@ import { ResultViewerModal } from "../component/ResultViewerModal.jsx";
 import { Table } from "../component/Table";
 
 function UsersPage() {
-  const [tab, setTab] = useState("members");
-  const [query, setQuery] = useState("");
+  const [searchParams, setSearchParams] = useSearchParams();
+  const [tab, setTab] = useState(() => {
+    const t = searchParams.get("tab");
+    return t === "counselors" || t === "members" ? t : "members";
+  });
+  const [query, setQuery] = useState(() => searchParams.get("search") || "");
   const [orgs, setOrgs] = useState([]);
   const [highRisk, setHighRisk] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [viewResultId, setViewResultId] = useState(null);
+
+  useEffect(() => {
+    const q = searchParams.get("search") || "";
+    setQuery(q);
+    const t = searchParams.get("tab");
+    if (t === "counselors" || t === "members") {
+      setTab(t);
+    }
+  }, [searchParams]);
+
+  const handleTabChange = (t) => {
+    setTab(t);
+    setSearchParams((prev) => {
+      const next = new URLSearchParams(prev);
+      next.set("tab", t);
+      return next;
+    }, { replace: true });
+  };
+
+  const handleQueryChange = (q) => {
+    setQuery(q);
+    setSearchParams((prev) => {
+      const next = new URLSearchParams(prev);
+      if (q) {
+        next.set("search", q);
+      } else {
+        next.delete("search");
+      }
+      return next;
+    }, { replace: true });
+  };
 
   useEffect(() => {
     let cancelled = false;
@@ -232,7 +268,7 @@ function UsersPage() {
           <button
             key={t.key}
             type="button"
-            onClick={() => setTab(t.key)}
+            onClick={() => handleTabChange(t.key)}
             className={cn(
               "px-5 h-11 rounded-xl text-sm font-semibold flex items-center gap-2 transition",
               tab === t.key ? "bg-ink text-beige" : "text-ink/60 hover:text-ink",
@@ -257,7 +293,7 @@ function UsersPage() {
             icon={<IconSearch size={16} />}
             placeholder={`Search ${tab}…`}
             value={query}
-            onChange={(e) => setQuery(e.target.value)}
+            onChange={(e) => handleQueryChange(e.target.value)}
           />
         </div>
       </div>

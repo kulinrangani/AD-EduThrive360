@@ -14,6 +14,7 @@ const APP_PAGE_SET = new Set([
   "alerts",
   "reports",
   "settings",
+  "profile",
 ]);
 const DEFAULT_APP_PAGE = "dashboard";
 
@@ -23,7 +24,7 @@ interface PageTitle {
 }
 
 const PAGE_TITLES: Record<string, PageTitle> = {
-  dashboard: { title: "Dashboard", sub: "Overview" },
+  dashboard: { title: "Dashboard", sub: "Dashboard" },
   quizzes: { title: "Quizzes", sub: "Builder & configuration" },
   "quizzes/:quizId": { title: "Quiz builder", sub: "Quizzes" },
   organizations: { title: "Organizations", sub: "Schools & corporates" },
@@ -34,6 +35,7 @@ const PAGE_TITLES: Record<string, PageTitle> = {
   alerts: { title: "Alerts", sub: "Active flags & reviews" },
   reports: { title: "Reports", sub: "Exports & analytics" },
   settings: { title: "Settings", sub: "Workspace configuration" },
+  profile: { title: "Profile Settings", sub: "Profile" },
 };
 
 export function ProtectedLayout() {
@@ -142,6 +144,7 @@ export function ProtectedLayout() {
         <Navbar
           title={sub}
           subtitle={title}
+          user={user}
           onOpenMobileNav={() => setMobileOpen(true)}
         />
         <div className="p-5 lg:p-8 flex-1">
