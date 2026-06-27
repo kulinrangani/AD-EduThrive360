@@ -23,6 +23,10 @@ export async function resetPassword(token, password) {
 }
 
 export async function updateProfile(payload) {
-  const { data } = await apiClient.put("/auth/profile", payload);
+  const config = {};
+  if (payload instanceof FormData) {
+    config.headers = { "Content-Type": "multipart/form-data" };
+  }
+  const { data } = await apiClient.put("/auth/profile", payload, config);
   return data.user;
 }

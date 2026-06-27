@@ -12,12 +12,17 @@ function ProfilePage() {
   const [email, setEmail] = useState("");
   const [phoneNumber, setPhoneNumber] = useState("");
   const [avatarUrl, setAvatarUrl] = useState("");
+  const [avatarFile, setAvatarFile] = useState(null);
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
 
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
   const [saving, setSaving] = useState(false);
+
+  const [passwordError, setPasswordError] = useState("");
+  const [passwordSuccess, setPasswordSuccess] = useState("");
+  const [passwordSaving, setPasswordSaving] = useState(false);
 
   // Initialize fields from current user data
   useEffect(() => {
@@ -26,6 +31,7 @@ function ProfilePage() {
       setEmail(user.email || "");
       setPhoneNumber(user.phoneNumber || "");
       setAvatarUrl(user.avatarUrl || "");
+      setAvatarFile(null);
     }
   }, [user]);
 
@@ -39,6 +45,7 @@ function ProfilePage() {
       return;
     }
 
+    setAvatarFile(file);
     const reader = new FileReader();
     reader.onloadend = () => {
       setAvatarUrl(reader.result);
@@ -49,12 +56,13 @@ function ProfilePage() {
 
   const handleRemovePhoto = () => {
     setAvatarUrl("");
+    setAvatarFile(null);
     if (fileInputRef.current) {
       fileInputRef.current.value = "";
     }
   };
 
-  const handleSubmit = async (e) => {
+  const handleProfileSubmit = async (e) => {
     e.preventDefault();
     setError("");
     setSuccess("");
@@ -69,41 +77,67 @@ function ProfilePage() {
       return;
     }
 
-    if (password) {
-      if (password.length < 8) {
-        setError("Password must be at least 8 characters");
-        return;
-      }
-      if (password !== confirmPassword) {
-        setError("Passwords do not match");
-        return;
-      }
-    }
-
     setSaving(true);
 
     try {
-      const payload = {
-        fullName: fullName.trim(),
-        email: email.trim().toLowerCase(),
-        phoneNumber: phoneNumber.trim(),
-        avatarUrl: avatarUrl,
-      };
-
-      if (password) {
-        payload.password = password;
+      const formData = new FormData();
+      formData.append("fullName", fullName.trim());
+      formData.append("email", email.trim().toLowerCase());
+      formData.append("phoneNumber", phoneNumber.trim());
+      
+      if (avatarFile) {
+        formData.append("avatar", avatarFile);
+      } else {
+        formData.append("avatarUrl", avatarUrl);
       }
 
-      await authApi.updateProfile(payload);
+      await authApi.updateProfile(formData);
       await refreshProfile();
 
       setSuccess("Profile updated successfully!");
-      setPassword("");
-      setConfirmPassword("");
     } catch (err) {
       setError(err.response?.data?.error ?? err.message ?? "Failed to update profile");
     } finally {
       setSaving(false);
+    }
+  };
+
+  const handlePasswordSubmit = async (e) => {
+    e.preventDefault();
+    setPasswordError("");
+    setPasswordSuccess("");
+
+    if (!password) {
+      setPasswordError("Password is required");
+      return;
+    }
+
+    if (password.length < 8) {
+      setPasswordError("Password must be at least 8 characters");
+      return;
+    }
+
+    if (password !== confirmPassword) {
+      setPasswordError("Passwords do not match");
+      return;
+    }
+
+    setPasswordSaving(true);
+
+    try {
+      const payload = {
+        password: password,
+      };
+
+      await authApi.updateProfile(payload);
+
+      setPasswordSuccess("Password changed successfully!");
+      setPassword("");
+      setConfirmPassword("");
+    } catch (err) {
+      setPasswordError(err.response?.data?.error ?? err.message ?? "Failed to change password");
+    } finally {
+      setPasswordSaving(false);
     }
   };
 
@@ -114,7 +148,8 @@ function ProfilePage() {
         <p className="text-ink/60 mt-1">Manage your administrator account credentials and personal details.</p>
       </div>
 
-      <form onSubmit={handleSubmit} className="space-y-6">
+      {/* Profile Details Form */}
+      <form onSubmit={handleProfileSubmit} className="space-y-6">
         {error && (
           <p className="text-sm text-red-600 bg-red-50 rounded-xl px-4 py-3 border border-red-100">
             {error}
@@ -210,10 +245,30 @@ function ProfilePage() {
           </div>
         </Card>
 
-        {/* Security / Password Change */}
+        <div className="flex justify-end">
+          <Button type="submit" disabled={saving}>
+            {saving ? "Saving changes..." : "Save changes"}
+          </Button>
+        </div>
+      </form>
+
+      {/* Change Password Form */}
+      <form onSubmit={handlePasswordSubmit} className="space-y-6">
+        {passwordError && (
+          <p className="text-sm text-red-600 bg-red-50 rounded-xl px-4 py-3 border border-red-100">
+            {passwordError}
+          </p>
+        )}
+
+        {passwordSuccess && (
+          <p className="text-sm text-emerald-700 bg-emerald-50 rounded-xl px-4 py-3 border border-emerald-100">
+            {passwordSuccess}
+          </p>
+        )}
+
         <Card>
           <h2 className="font-display text-xl text-ink mb-2">Change Password</h2>
-          <p className="text-xs text-ink/50 mb-4">Leave fields blank if you do not want to update your password.</p>
+          <p className="text-xs text-ink/50 mb-4">Enter a new password to update your login credentials.</p>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <label className="block text-xs font-semibold text-ink/50 uppercase tracking-wider mb-2">
@@ -226,6 +281,7 @@ function ProfilePage() {
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="Min. 8 characters"
                 minLength={8}
+                required
               />
             </div>
 
@@ -240,15 +296,15 @@ function ProfilePage() {
                 onChange={(e) => setConfirmPassword(e.target.value)}
                 placeholder="Min. 8 characters"
                 minLength={8}
+                required
               />
             </div>
           </div>
         </Card>
 
-        {/* Action button */}
         <div className="flex justify-end">
-          <Button type="submit" disabled={saving}>
-            {saving ? "Saving changes..." : "Save changes"}
+          <Button type="submit" disabled={passwordSaving}>
+            {passwordSaving ? "Updating password..." : "Update password"}
           </Button>
         </div>
       </form>

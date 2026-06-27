@@ -133,9 +133,13 @@ function Modal({ open, onClose, title, subtitle, children, footer, width='max-w-
 // Avatar — colored initial, no-art-required
 function Avatar({ name, size=36, tone, src }) {
   if (src) {
+    const apiBase = import.meta.env.VITE_API_URL ?? "http://localhost:3000";
+    const fullSrc = src.startsWith("data:") || src.startsWith("http://") || src.startsWith("https://")
+      ? src
+      : `${apiBase}${src}`;
     return (
       <img
-        src={src}
+        src={fullSrc}
         alt={name}
         className="inline-block rounded-full object-cover border border-ink/5"
         style={{ width: size, height: size }}
